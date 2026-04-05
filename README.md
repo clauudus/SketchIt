@@ -4,7 +4,7 @@ A generative AI model trained exclusively on one artist's own drawings, created 
 
 ## The Idea
 AI image generation is surrounded by controversy: artists' work is scraped and used to train models without consent. This project flips that question. What does it look like when a single artist deliberately trains a model only on their own work? <br/>
-The output isn't just a generator; it's a statement about authorship, consent, and what "AI-generated art" can mean when the human behind it is fully in control of the dataset. <br/>
+The output isn't just a generator; it's a statement about authorship, consent and what "AI-generated art" can mean when the human behind it is fully in control of the dataset. <br/>
 
 ## Quick Start
 ```
