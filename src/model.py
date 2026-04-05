@@ -1,128 +1,174 @@
-import math
+"""
+
+DCGAN architecture adapted for small datasets (~100 images).
+
+Architecture decisions:
+  - Smaller than standard DCGAN → fewer parameters → less overfitting on small data
+  - Spectral normalisation on Discriminator → more stable training
+  - Instance noise on Discriminator inputs → prevents mode collapse
+  - Grayscale output (1 channel) → matches your sketch images
+  - Easily upgradeable to 128×128 by adding one more block
+"""
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 
-def gn(channels: int) -> nn.GroupNorm:
-    groups = 8
-    if channels < groups:
-        groups = 1
-    return nn.GroupNorm(groups, channels)
+# ── Hyper-parameters ─────────────────────────────────────────────────────────
+
+LATENT_DIM  = 128   # Size of the random noise vector (z)
+IMAGE_SIZE  = 64    # Must match preprocess.IMAGE_SIZE
+N_CHANNELS  = 1     # 1 = grayscale sketches;  3 = colour (later phase)
+BASE_FEAT_G = 64    # Base feature count in Generator
+BASE_FEAT_D = 64    # Base feature count in Discriminator
 
 
-class SinusoidalPositionEmbeddings(nn.Module):
-    def __init__(self, dim: int):
+# ── Building blocks ───────────────────────────────────────────────────────────
+
+def _conv_block_g(in_ch, out_ch, kernel=4, stride=2, padding=1):
+    """Upsampling block for the Generator (ConvTranspose2d + BN + ReLU)."""
+    return nn.Sequential(
+        nn.ConvTranspose2d(in_ch, out_ch, kernel, stride, padding, bias=False),
+        nn.BatchNorm2d(out_ch),
+        nn.ReLU(inplace=True),
+    )
+
+
+def _conv_block_d(in_ch, out_ch, kernel=4, stride=2, padding=1):
+    """Downsampling block for the Discriminator (Conv2d + SpecNorm + LeakyReLU)."""
+    return nn.Sequential(
+        nn.utils.spectral_norm(
+            nn.Conv2d(in_ch, out_ch, kernel, stride, padding, bias=False)
+        ),
+        nn.LeakyReLU(0.2, inplace=True),
+    )
+
+
+# ── Generator ─────────────────────────────────────────────────────────────────
+
+class Generator(nn.Module):
+    """
+    Takes a random vector z ∈ R^{LATENT_DIM} and outputs a sketch image.
+
+    Architecture (64×64 output):
+      z (128)  →  4×4  →  8×8  →  16×16  →  32×32  →  64×64
+
+    To get 128×128 output, add one more _conv_block_g at the end and
+    change the first projection to 2×2.
+    """
+
+    def __init__(
+        self,
+        latent_dim: int = LATENT_DIM,
+        base_feat:  int = BASE_FEAT_G,
+        n_channels: int = N_CHANNELS,
+    ):
         super().__init__()
-        self.dim = dim
+        bf = base_feat
 
-    def forward(self, time: torch.Tensor):
-        device = time.device
-        half_dim = self.dim // 2
-        scale = math.log(10000) / max(half_dim - 1, 1)
-        emb = torch.exp(torch.arange(half_dim, device=device) * -scale)
-        emb = time[:, None] * emb[None, :]
-        emb = torch.cat([emb.sin(), emb.cos()], dim=-1)
-        return emb
+        self.net = nn.Sequential(
+            # Project noise → 4×4 feature map
+            nn.ConvTranspose2d(latent_dim, bf * 8, 4, 1, 0, bias=False),  # → (bf*8) × 4 × 4
+            nn.BatchNorm2d(bf * 8),
+            nn.ReLU(inplace=True),
 
+            _conv_block_g(bf * 8, bf * 4),  # → (bf*4) × 8 × 8
+            _conv_block_g(bf * 4, bf * 2),  # → (bf*2) × 16 × 16
+            _conv_block_g(bf * 2, bf),      # → (bf)   × 32 × 32
 
-class ResBlock(nn.Module):
-    def __init__(self, in_ch: int, out_ch: int, time_emb_dim: int):
-        super().__init__()
-        self.block1 = nn.Conv2d(in_ch, out_ch, kernel_size=3, padding=1)
-        self.norm1 = gn(out_ch)
-
-        self.time_proj = nn.Linear(time_emb_dim, out_ch)
-
-        self.block2 = nn.Conv2d(out_ch, out_ch, kernel_size=3, padding=1)
-        self.norm2 = gn(out_ch)
-
-        self.res_conv = nn.Identity() if in_ch == out_ch else nn.Conv2d(in_ch, out_ch, 1)
-
-    def forward(self, x: torch.Tensor, t: torch.Tensor):
-        h = self.block1(x)
-        h = self.norm1(h)
-        h = F.silu(h)
-
-        t_emb = self.time_proj(t)[:, :, None, None]
-        h = h + t_emb
-
-        h = self.block2(h)
-        h = self.norm2(h)
-        h = F.silu(h)
-
-        return h + self.res_conv(x)
-
-
-class Downsample(nn.Module):
-    def __init__(self, ch: int):
-        super().__init__()
-        self.op = nn.Conv2d(ch, ch, kernel_size=4, stride=2, padding=1)
-
-    def forward(self, x):
-        return self.op(x)
-
-
-class Upsample(nn.Module):
-    def __init__(self, ch: int):
-        super().__init__()
-        self.op = nn.ConvTranspose2d(ch, ch, kernel_size=4, stride=2, padding=1)
-
-    def forward(self, x):
-        return self.op(x)
-
-
-class UNet(nn.Module):
-    def __init__(self, in_channels: int = 3, base_channels: int = 64, time_dim: int = 256):
-        super().__init__()
-
-        self.time_emb = nn.Sequential(
-            SinusoidalPositionEmbeddings(time_dim),
-            nn.Linear(time_dim, time_dim),
-            nn.SiLU(),
-            nn.Linear(time_dim, time_dim),
+            # Final layer: no BN, Tanh squishes output to [-1, 1]
+            nn.ConvTranspose2d(bf, n_channels, 4, 2, 1, bias=False),  # → n_ch × 64 × 64
+            nn.Tanh(),
         )
 
-        self.inc = nn.Conv2d(in_channels, base_channels, kernel_size=3, padding=1)
+        self._init_weights()
 
-        self.down1 = ResBlock(base_channels, base_channels, time_dim)
-        self.downsample1 = Downsample(base_channels)
+    def forward(self, z: torch.Tensor) -> torch.Tensor:
+        return self.net(z)
 
-        self.down2 = ResBlock(base_channels, base_channels * 2, time_dim)
-        self.downsample2 = Downsample(base_channels * 2)
+    def _init_weights(self):
+        for m in self.modules():
+            if isinstance(m, (nn.ConvTranspose2d, nn.Conv2d)):
+                nn.init.normal_(m.weight, 0.0, 0.02)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.normal_(m.weight, 1.0, 0.02)
+                nn.init.zeros_(m.bias)
 
-        self.mid1 = ResBlock(base_channels * 2, base_channels * 4, time_dim)
-        self.mid2 = ResBlock(base_channels * 4, base_channels * 4, time_dim)
 
-        self.up1 = Upsample(base_channels * 4)
-        self.up_res1 = ResBlock(base_channels * 4 + base_channels * 2, base_channels * 2, time_dim)
+# ── Discriminator ─────────────────────────────────────────────────────────────
 
-        self.up2 = Upsample(base_channels * 2)
-        self.up_res2 = ResBlock(base_channels * 2 + base_channels, base_channels, time_dim)
+class Discriminator(nn.Module):
+    """
+    Takes a 64×64 image (real or fake) and outputs a probability score.
+    Spectral normalisation is used instead of BatchNorm for stability.
 
-        self.out = nn.Conv2d(base_channels, in_channels, kernel_size=1)
+    Instance noise (added during training, not here) prevents the discriminator
+    from becoming too confident and crashing the generator.
+    """
 
-    def forward(self, x: torch.Tensor, t: torch.Tensor):
-        t = t.float()
-        t = self.time_emb(t)
+    def __init__(
+        self,
+        base_feat:  int = BASE_FEAT_D,
+        n_channels: int = N_CHANNELS,
+    ):
+        super().__init__()
+        bf = base_feat
 
-        x0 = self.inc(x)
-        x1 = self.down1(x0, t)
-        x1d = self.downsample1(x1)
+        self.net = nn.Sequential(
+            # No BN on first layer (common practice)
+            nn.utils.spectral_norm(
+                nn.Conv2d(n_channels, bf, 4, 2, 1, bias=False)  # → bf × 32 × 32
+            ),
+            nn.LeakyReLU(0.2, inplace=True),
 
-        x2 = self.down2(x1d, t)
-        x2d = self.downsample2(x2)
+            _conv_block_d(bf,     bf * 2),   # → (bf*2) × 16 × 16
+            _conv_block_d(bf * 2, bf * 4),   # → (bf*4) × 8  × 8
+            _conv_block_d(bf * 4, bf * 8),   # → (bf*8) × 4  × 4
 
-        h = self.mid1(x2d, t)
-        h = self.mid2(h, t)
+            # Output a single scalar per image
+            nn.utils.spectral_norm(
+                nn.Conv2d(bf * 8, 1, 4, 1, 0, bias=False)  # → 1 × 1 × 1
+            ),
+        )
 
-        h = self.up1(h)
-        h = torch.cat([h, x2], dim=1)
-        h = self.up_res1(h, t)
+        self._init_weights()
 
-        h = self.up2(h)
-        h = torch.cat([h, x1], dim=1)
-        h = self.up_res2(h, t)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.net(x).view(-1)   # Flatten to [batch]
 
-        return self.out(h)
+    def _init_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.normal_(m.weight, 0.0, 0.02)
+
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+
+def make_noise(batch_size: int, latent_dim: int = LATENT_DIM, device="cpu") -> torch.Tensor:
+    """Sample a batch of random noise vectors z ~ N(0, 1)."""
+    return torch.randn(batch_size, latent_dim, 1, 1, device=device)
+
+
+def count_parameters(model: nn.Module) -> int:
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+
+# ── Quick sanity check ────────────────────────────────────────────────────────
+
+if __name__ == "__main__":
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Device: {device}")
+
+    G = Generator().to(device)
+    D = Discriminator().to(device)
+
+    print(f"Generator     parameters: {count_parameters(G):,}")
+    print(f"Discriminator parameters: {count_parameters(D):,}")
+
+    z    = make_noise(4, device=device)
+    fake = G(z)
+    score = D(fake)
+
+    print(f"\nNoise shape  : {z.shape}")
+    print(f"Fake image   : {fake.shape}   range [{fake.min():.2f}, {fake.max():.2f}]")
+    print(f"D score      : {score.shape}  → {score.detach().cpu().numpy().round(3)}")
