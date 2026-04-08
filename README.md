@@ -1,6 +1,7 @@
 # DrawingMLmodel
 What if the artist consents? <br/>
 A generative AI model trained exclusively on one artist's own drawings, created to explore the ethics of AI art generation. <br/>
+This tool can then be used by the artist to get inspiration to create new art when having, for example, an art-blockage. <br/>
 
 ## The Idea
 AI image generation is surrounded by controversy: artists' work is scraped and used to train models without consent. This project flips that question. What does it look like when a single artist deliberately trains a model only on their own work? <br/>
@@ -39,9 +40,9 @@ The model is a DCGAN (Deep Convolutional Generative Adversarial Network) adapted
 - Long training (2000 epochs) -> Small models need more iterations <br/>
 
 ## Phases
-- Phase 1: (now) Grayscale scanned sketches. <br/>
-- Phase 2: (soon) Digital clean drawings with color -> Upgrade NCHANNELS = 3 <br/>
-- Phase 3: Explore conditioning -> Generate flowers in a certain style (blue flower, red, etc, per example) <br> 
+- Phase 1: Grayscale scanned sketches (done) <br/>
+- Phase 2: Colorizer (new model, trained with photos of flowers to understand color theory) <br/>
+- Phase 3: Generate sketches with Model 1, color it with Model 2 <br> 
 
 ## Generate New Flowers
 ```
