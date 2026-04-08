@@ -62,10 +62,11 @@ class FlowerSketchDataset(Dataset):
     effectively multiplying your dataset many times over.
     """
 
-    def __init__(self, img_dir: str, image_size: int = IMAGE_SIZE, augment: bool = True):
+    def __init__(self, img_dir: str, image_size: int = IMAGE_SIZE, augment: bool = True, color: bool = False):
         self.img_dir    = img_dir
         self.image_size = image_size
         self.augment    = augment
+        self.color      = color      # False = grayscale, True = RGB
         self.paths      = sorted([
             os.path.join(img_dir, f)
             for f in os.listdir(img_dir)
@@ -78,13 +79,15 @@ class FlowerSketchDataset(Dataset):
                 f"Run preprocess.batch_clean() first."
             )
 
-        print(f"Dataset: {len(self.paths)} images in '{img_dir}'")
+        mode = "color RGB" if color else "grayscale"
+        print(f"Dataset: {len(self.paths)} images in '{img_dir}'  [{mode}]")
 
     def __len__(self):
         return len(self.paths)
 
     def __getitem__(self, idx: int) -> torch.Tensor:
-        img = Image.open(self.paths[idx]).convert("L")
+        mode = "RGB" if self.color else "L"
+        img  = Image.open(self.paths[idx]).convert(mode)
 
         if self.augment:
             img = self._augment(img)
@@ -135,3 +138,22 @@ if __name__ == "__main__":
     sample = ds[0]
     print(f"Sample tensor shape : {sample.shape}")   # torch.Size([1, 64, 64])
     print(f"Value range         : [{sample.min():.2f}, {sample.max():.2f}]")  # [-1, 1]
+
+
+def batch_clean_color(src_dir: str, dst_dir: str, size: int = 128):
+    """
+    Process color images (your digital drawings) for Phase 2 training.
+    Keeps RGB, just resizes and lightly normalises contrast.
+    No median filter or grayscale conversion — color must be preserved.
+    """
+    os.makedirs(dst_dir, exist_ok=True)
+    files = [f for f in os.listdir(src_dir) if f.lower().endswith(
+        (".jpg", ".jpeg", ".png", ".bmp", ".tiff"))]
+
+    print(f"Processing {len(files)} color images...")
+    for fname in files:
+        img = Image.open(os.path.join(src_dir, fname)).convert("RGB")
+        img = img.resize((size, size), Image.LANCZOS)
+        img.save(os.path.join(dst_dir, os.path.splitext(fname)[0] + ".png"))
+
+    print(f"Saved {len(files)} color images to '{dst_dir}'")
