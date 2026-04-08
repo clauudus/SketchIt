@@ -24,13 +24,13 @@ DIRS = [
 print("Creating project structure...")
 for d in DIRS:
     os.makedirs(d, exist_ok=True)
-    print(f"  ✓ {d}/")
+    print(f"  OK {d}/")
 
 raw_images = [f for f in os.listdir("data/raw") if f.lower().endswith(
     (".jpg", ".jpeg", ".png", ".bmp", ".tiff"))]
 
 if len(raw_images) == 0:
-    print("\n⚠️  No images found in data/raw/")
+    print("\n No images found in data/raw/")
     print("   Copy your scanned flower sketches there and run this script again.")
 else:
     print(f"\nFound {len(raw_images)} raw images. Cleaning...")
