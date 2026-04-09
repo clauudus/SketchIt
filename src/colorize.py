@@ -1,6 +1,12 @@
 """
 The bridge between Model 1 (sketch) and Model 2 (photo).
-All images are 64x64.
+
+Loss strategy:
+  - Structural loss: grayscale(colorized) must match input sketch
+    forces color to stay WITHIN the lines, not replace them
+  - Color critic loss: colorized features must match real flower photo features
+    guides which colors to use (from Model 2's knowledge)
+  - NO L1 against photos
 
 Training:
     python src/colorize.py --train
@@ -8,7 +14,7 @@ Training:
 Colorize a generated sketch:
     python src/colorize.py --sketch_seed 42
 
-Colorize an existing image file:
+Colorize an existing image:
     python src/colorize.py --image path/to/sketch.png
 """
 
@@ -27,7 +33,6 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(__file__))
 from model import Generator, make_noise, LATENT_DIM
 from model_photo import PhotoDiscriminator
-from preprocess import FlowerSketchDataset
 
 IMAGE_SIZE = 64
 
@@ -38,13 +43,13 @@ DEFAULTS = dict(
     sketch_data    = "data/processed",
     photo_data     = "data/processed_photos",
     output_dir     = "output/colorizer",
-    epochs         = 1000,
+    epochs         = 500,
     batch_size     = 8,
     lr             = 1e-4,
-    lambda_color   = 10.0,
-    lambda_l1      = 1.0,
-    save_every     = 200,
-    sample_every   = 50,
+    lambda_struct  = 20.0,   # structural loss weight — HIGH keeps lines intact
+    lambda_color   = 5.0,    # color critic weight — lower than before
+    save_every     = 100,
+    sample_every   = 25,
     seed           = 42,
 )
 
@@ -54,8 +59,8 @@ DEFAULTS = dict(
 class UNetBlock(nn.Module):
     def __init__(self, in_ch, out_ch, down=True, use_bn=True, dropout=False):
         super().__init__()
-        conv   = nn.Conv2d(in_ch, out_ch, 4, 2, 1, bias=False) if down \
-            else nn.ConvTranspose2d(in_ch, out_ch, 4, 2, 1, bias=False)
+        conv = nn.Conv2d(in_ch, out_ch, 4, 2, 1, bias=False) if down \
+          else nn.ConvTranspose2d(in_ch, out_ch, 4, 2, 1, bias=False)
         layers = [conv]
         if use_bn:
             layers.append(nn.BatchNorm2d(out_ch))
@@ -71,24 +76,23 @@ class UNetBlock(nn.Module):
 class Colorizer(nn.Module):
     """
     U-Net: grayscale sketch [1, 64, 64] -> color image [3, 64, 64].
-    Skip connections preserve sketch line structure while the
-    decoder fills in color guided by the photo color critic.
+
+    Skip connections carry the sketch's line structure from encoder
+    to decoder at every scale — this is what makes the lines survive
+    into the colored output.
     """
     def __init__(self):
         super().__init__()
-        # Encoder
         self.e1 = UNetBlock(1,   64,  down=True, use_bn=False)  # 32x32
         self.e2 = UNetBlock(64,  128, down=True)                 # 16x16
         self.e3 = UNetBlock(128, 256, down=True)                 #  8x8
         self.e4 = UNetBlock(256, 512, down=True)                 #  4x4
 
-        # Bottleneck
         self.bottleneck = nn.Sequential(
             nn.Conv2d(512, 512, 4, 2, 1, bias=False),            #  2x2
             nn.ReLU(),
         )
 
-        # Decoder with skip connections
         self.d1 = UNetBlock(512,  512, down=False, dropout=True)  #  4x4
         self.d2 = UNetBlock(1024, 256, down=False)                #  8x8
         self.d3 = UNetBlock(512,  128, down=False)                # 16x16
@@ -121,9 +125,14 @@ class Colorizer(nn.Module):
                 nn.init.zeros_(m.bias)
 
 
-# ── Paired dataset ────────────────────────────────────────────────────────────
+# ── Dataset ───────────────────────────────────────────────────────────────────
 
 class SketchPhotoDataset(Dataset):
+    """
+    Returns (sketch_grayscale, photo_rgb) pairs.
+    They are unpaired — the photo just provides color distribution reference
+    for the color critic. The sketch is what gets colored.
+    """
     def __init__(self, sketch_dir, photo_dir, size=IMAGE_SIZE):
         self.size = size
         self.sketches = sorted([
@@ -138,22 +147,55 @@ class SketchPhotoDataset(Dataset):
             raise RuntimeError(f"No sketches in '{sketch_dir}'")
         if not self.photos:
             raise RuntimeError(f"No photos in '{photo_dir}'")
-        print(f"Colorizer dataset: {len(self.sketches)} sketches, {len(self.photos)} photos")
+        print(f"Colorizer dataset: {len(self.sketches)} sketches, "
+              f"{len(self.photos)} photos")
 
     def __len__(self):
         return max(len(self.sketches), len(self.photos))
 
     def __getitem__(self, idx):
-        sketch = Image.open(self.sketches[idx % len(self.sketches)]).convert("L") \
+        sketch = Image.open(self.sketches[idx % len(self.sketches)]) \
+                      .convert("L") \
                       .resize((self.size, self.size), Image.LANCZOS)
-        photo  = Image.open(self.photos[idx % len(self.photos)]).convert("RGB") \
+        photo  = Image.open(self.photos[idx % len(self.photos)]) \
+                      .convert("RGB") \
                       .resize((self.size, self.size), Image.LANCZOS)
         return TF.to_tensor(sketch) * 2 - 1, TF.to_tensor(photo) * 2 - 1
 
 
-# ── Color critic loss ─────────────────────────────────────────────────────────
+# ── Losses ────────────────────────────────────────────────────────────────────
+
+def structural_loss(colorized, sketch, lambda_struct):
+    """
+    KEY FIX: converts the colorized RGB output back to grayscale and
+    compares it against the original sketch.
+
+    This forces the network to preserve the sketch's line structure —
+    dark lines stay dark, white background stays light.
+    Without this, the network ignores the sketch entirely.
+
+    Grayscale conversion uses standard luminance weights:
+      Y = 0.299*R + 0.587*G + 0.114*B
+    """
+    # colorized is in [-1, 1], convert to [0, 1] first
+    col_01 = (colorized + 1) / 2
+    gray   = (0.299 * col_01[:, 0:1, :, :]
+            + 0.587 * col_01[:, 1:2, :, :]
+            + 0.114 * col_01[:, 2:3, :, :])
+
+    # sketch is in [-1, 1], convert to [0, 1]
+    sk_01  = (sketch + 1) / 2
+
+    return nn.functional.l1_loss(gray, sk_01) * lambda_struct
+
 
 def color_critic_loss(D_photo, colorized, real_photos, lambda_color):
+    """
+    Uses the Photo Discriminator's learned features as a color guide.
+    Colorized output should have similar color feature distributions
+    to real flower photos — this is how color knowledge transfers
+    from Model 2 to the colorizer.
+    """
     feats_col  = D_photo.extract_features(colorized)
     feats_real = D_photo.extract_features(real_photos)
     loss = sum(nn.functional.l1_loss(fc, fr.detach())
@@ -169,55 +211,72 @@ def train(cfg):
 
     print(f"\n{'='*55}")
     print(f"  Colorizer Training  |  64x64  |  device: {device}")
+    print(f"  structural loss: {cfg['lambda_struct']}  "
+          f"color critic: {cfg['lambda_color']}")
     print(f"{'='*55}\n")
 
+    # Load frozen color critic (Photo Discriminator)
     D_photo = PhotoDiscriminator().to(device)
     if os.path.exists(cfg["photo_d_ckpt"]):
-        D_photo.load_state_dict(torch.load(cfg["photo_d_ckpt"], map_location=device))
+        D_photo.load_state_dict(
+            torch.load(cfg["photo_d_ckpt"], map_location=device))
         print(f"Color critic loaded from {cfg['photo_d_ckpt']}")
     else:
-        print(f"No photo discriminator found — train Model 2 first:")
-        print(f"  python src/train_photos.py")
+        print(f"No photo discriminator at {cfg['photo_d_ckpt']}")
+        print("Train Model 2 first: python src/train_photos.py")
+        print("Continuing with random color critic — colors will be arbitrary\n")
 
     for p in D_photo.parameters():
         p.requires_grad = False
     D_photo.eval()
 
+    # Colorizer
     colorizer = Colorizer().to(device)
     if cfg.get("resume") and os.path.exists(cfg["resume"]):
-        colorizer.load_state_dict(torch.load(cfg["resume"], map_location=device))
+        colorizer.load_state_dict(
+            torch.load(cfg["resume"], map_location=device))
         print(f"Resumed from {cfg['resume']}")
 
-    opt     = optim.Adam(colorizer.parameters(), lr=cfg["lr"], betas=(0.5, 0.999))
+    opt     = optim.Adam(colorizer.parameters(),
+                         lr=cfg["lr"], betas=(0.5, 0.999))
     dataset = SketchPhotoDataset(cfg["sketch_data"], cfg["photo_data"])
     loader  = DataLoader(dataset, batch_size=cfg["batch_size"],
                          shuffle=True, num_workers=0, drop_last=True)
 
     samples_dir = os.path.join(cfg["output_dir"], "samples")
-    os.makedirs(samples_dir,        exist_ok=True)
-    os.makedirs(cfg["output_dir"],  exist_ok=True)
+    os.makedirs(samples_dir,       exist_ok=True)
+    os.makedirs(cfg["output_dir"], exist_ok=True)
+
+    print(f"\nEpoch | Total loss | Struct loss | Color loss | Time")
+    print("-" * 55)
 
     for epoch in range(cfg["epochs"]):
         t0 = time.time()
-        total_loss = 0.0
+        sum_total = sum_struct = sum_color = 0.0
 
         for sketches, photos in loader:
             sketches  = sketches.to(device)
             photos    = photos.to(device)
             colorized = colorizer(sketches)
 
-            l1   = nn.functional.l1_loss(colorized, photos) * cfg["lambda_l1"]
+            sl   = structural_loss(colorized, sketches, cfg["lambda_struct"])
             cc   = color_critic_loss(D_photo, colorized, photos, cfg["lambda_color"])
-            loss = l1 + cc
+            loss = sl + cc
 
             opt.zero_grad()
             loss.backward()
             opt.step()
-            total_loss += loss.item()
 
+            sum_total  += loss.item()
+            sum_struct += sl.item()
+            sum_color  += cc.item()
+
+        n = len(loader)
         print(
             f"Epoch {epoch+1:>4}/{cfg['epochs']}  |  "
-            f"Loss: {total_loss/len(loader):.4f}  |  "
+            f"total {sum_total/n:.3f}  "
+            f"struct {sum_struct/n:.3f}  "
+            f"color {sum_color/n:.3f}  |  "
             f"{time.time()-t0:.1f}s"
         )
 
@@ -233,10 +292,12 @@ def train(cfg):
                     nrow=4, padding=2
                 )
             colorizer.train()
-            print(f"  Samples -> {samples_dir}/epoch_{epoch+1:04d}.png")
+            print(f"  Samples (top: sketch | bottom: colored) "
+                  f"-> {samples_dir}/epoch_{epoch+1:04d}.png")
 
         if (epoch + 1) % cfg["save_every"] == 0:
-            path = os.path.join(cfg["output_dir"], f"colorizer_epoch_{epoch+1:04d}.pt")
+            path = os.path.join(
+                cfg["output_dir"], f"colorizer_epoch_{epoch+1:04d}.pt")
             torch.save(colorizer.state_dict(), path)
             print(f"  Checkpoint -> {path}")
 
@@ -256,7 +317,8 @@ def colorize_sketch(cfg, sketch_seed=None, image_path=None):
     G_sketch.eval()
 
     colorizer = Colorizer().to(device)
-    colorizer.load_state_dict(torch.load(cfg["colorizer_ckpt"], map_location=device))
+    colorizer.load_state_dict(
+        torch.load(cfg["colorizer_ckpt"], map_location=device))
     colorizer.eval()
 
     with torch.no_grad():
@@ -282,7 +344,7 @@ def colorize_sketch(cfg, sketch_seed=None, image_path=None):
             torch.cat([sketch_rgb, colored_out], dim=0),
             out_path, nrow=2, padding=4
         )
-        print(f"Saved: {out_path}  (left: sketch  right: colored)")
+        print(f"Saved: {out_path}  (left: sketch  |  right: colored)")
 
     return out_path
 
@@ -294,16 +356,17 @@ if __name__ == "__main__":
     for k, v in DEFAULTS.items():
         p.add_argument(f"--{k}", type=type(v), default=v)
     p.add_argument("--train",       action="store_true")
-    p.add_argument("--sketch_seed", type=int,  default=None)
-    p.add_argument("--image",       type=str,  default=None)
-    p.add_argument("--resume",      type=str,  default=None)
+    p.add_argument("--sketch_seed", type=int, default=None)
+    p.add_argument("--image",       type=str, default=None)
+    p.add_argument("--resume",      type=str, default=None)
     args = p.parse_args()
     cfg  = vars(args)
 
     if args.train:
         train(cfg)
     elif args.sketch_seed is not None or args.image:
-        colorize_sketch(cfg, sketch_seed=args.sketch_seed, image_path=args.image)
+        colorize_sketch(cfg, sketch_seed=args.sketch_seed,
+                        image_path=args.image)
     else:
         print("Usage:")
         print("  Train:               python src/colorize.py --train")
