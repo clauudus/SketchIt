@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 app = Flask(__name__, static_folder="web/static", template_folder="web")
 
-# ── Paths ─────────────────────────────────────────────────────────────────────
+# Paths
 
 SKETCH_UPLOAD_DIR  = "data/raw"
 PHOTO_UPLOAD_DIR   = "data/photos_raw"
@@ -37,7 +37,7 @@ for d in [SKETCH_UPLOAD_DIR, PHOTO_UPLOAD_DIR, PROCESSED_SKETCH,
           "output/photos", "web/static"]:
     os.makedirs(d, exist_ok=True)
 
-# ── Training state ────────────────────────────────────────────────────────────
+# Training state
 
 training_state = {
     "running":    False,
@@ -51,7 +51,7 @@ training_state = {
 }
 
 
-# ── Model detection ───────────────────────────────────────────────────────────
+# Model detection
 
 def _find_best_sketch_ckpt():
     """
@@ -130,14 +130,14 @@ def agreement_signed():
     return os.path.exists(AGREEMENT_FLAG)
 
 
-# ── Routes — pages ────────────────────────────────────────────────────────────
+# Routes - pages
 
 @app.route("/")
 def index():
     return send_from_directory("web", "index.html")
 
 
-# ── Routes — agreement ────────────────────────────────────────────────────────
+# Routes - agreement
 
 @app.route("/api/agreement", methods=["POST"])
 def sign_agreement():
@@ -151,7 +151,7 @@ def check_agreement():
     return jsonify({"signed": agreement_signed()})
 
 
-# ── Routes — status (replaces /api/trained) ───────────────────────────────────
+# Routes - status (replaces /api/trained)
 
 @app.route("/api/status")
 def status():
@@ -170,7 +170,7 @@ def is_trained_route():
     return jsonify({"trained": ms["fully_trained"], **ms})
 
 
-# ── Routes — uploads ──────────────────────────────────────────────────────────
+# Routes - uploads
 
 @app.route("/api/upload/sketches", methods=["POST"])
 def upload_sketches():
@@ -212,7 +212,7 @@ def _image_files(d):
             if f.lower().endswith((".jpg", ".jpeg", ".png", ".bmp", ".tiff"))]
 
 
-# ── Routes — training ─────────────────────────────────────────────────────────
+# Routes - training
 
 @app.route("/api/train", methods=["POST"])
 def start_training():
@@ -274,7 +274,7 @@ def _run_training(sketch_epochs, photo_epochs, colorizer_epochs):
         from preprocess import batch_clean, batch_clean_color, IMAGE_SIZE
         batch_clean(SKETCH_UPLOAD_DIR, PROCESSED_SKETCH, size=IMAGE_SIZE)
 
-        _update("photos_prep", message="Preparing flower photos...")
+        _update("photos_prep", message="Preparing photos...")
         batch_clean_color(PHOTO_UPLOAD_DIR, PROCESSED_PHOTO, size=64)
 
         _update("sketches", 0, sketch_epochs, message="Training your sketch model...")
@@ -282,7 +282,7 @@ def _run_training(sketch_epochs, photo_epochs, colorizer_epochs):
                      ["--data_dir", PROCESSED_SKETCH,
                       "--save_every", "500", "--sample_every", "200"])
 
-        _update("photos", 0, photo_epochs, message="Learning flower colours from photos...")
+        _update("photos", 0, photo_epochs, message="Learning colours from photos...")
         _train_model("src/train_photos.py", photo_epochs, "photos",
                      ["--data_dir", PROCESSED_PHOTO,
                       "--save_every", "500", "--sample_every", "200"])
@@ -293,7 +293,7 @@ def _run_training(sketch_epochs, photo_epochs, colorizer_epochs):
                       "--photo_data", PROCESSED_PHOTO,
                       "--save_every", "100", "--sample_every", "25"])
 
-        _update("done", message="Training complete! You can now generate flowers.")
+        _update("done", message="Training complete! You can now generate drawings.")
 
     except Exception as e:
         _update("error", error=str(e), message="Training failed.")
@@ -328,7 +328,7 @@ def _train_model(script, epochs, phase_label, extra_args=None):
         raise RuntimeError(f"{script} exited with code {proc.returncode}")
 
 
-# ── Routes — generation ───────────────────────────────────────────────────────
+# Routes - generation
 
 @app.route("/api/generate/sketch", methods=["POST"])
 def generate_sketch():
@@ -421,12 +421,12 @@ def serve_output(filename):
     return send_from_directory(GENERATED_DIR, filename)
 
 
-# ── Startup report ────────────────────────────────────────────────────────────
+# Startup report
 
 def _startup_report():
     ms = get_model_status()
     print("\n" + "="*50)
-    print("  Sketchmind — Web App")
+    print("  Sketchit — Web App")
     print("  Open http://localhost:5000 in your browser")
     print("="*50)
     print(f"  Sketch model  : {'✓ ' + ms['sketch_ckpt_name'] if ms['sketch_ready'] else '✗ not found'}")
