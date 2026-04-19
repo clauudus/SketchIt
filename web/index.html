@@ -171,7 +171,7 @@
       </div>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" id="btnAgree" disabled onclick="signAgreement()">I agree — let's begin</button>
+      <button class="btn btn-primary" id="btnAgree" disabled onclick="signAgreement()">I agree</button>
     </div>
   </section>
 
@@ -184,14 +184,14 @@
         <input type="file" id="inputSketches" multiple accept="image/*" onchange="filesSelected(this,'sketches')">
         <span class="upload-icon">✏️</span>
         <div class="upload-title">Your sketches</div>
-        <div class="upload-hint">Drag & drop or click to browse<br>JPG, PNG, BMP — up to 100 images</div>
+        <div class="upload-hint">Drag & drop or click to browse<br>JPG, PNG, BMP. Up to 100 images</div>
         <span class="upload-count" id="countSketches">0 images</span>
       </div>
       <div class="upload-card" id="dropPhotos" ondragover="dragOver(event,'dropPhotos')" ondragleave="dragLeave('dropPhotos')" ondrop="dropFiles(event,'photos')">
         <input type="file" id="inputPhotos" multiple accept="image/*" onchange="filesSelected(this,'photos')">
         <span class="upload-icon">🌸</span>
         <div class="upload-title">Your phhotos</div>
-        <div class="upload-hint">Reference photographs for colour<br>JPG, PNG, BMP — up to 100 images</div>
+        <div class="upload-hint">Reference photographs for colour<br>JPG, PNG, BMP. Up to 100 images</div>
         <span class="upload-count" id="countPhotos">0 images</span>
       </div>
     </div>
@@ -200,14 +200,14 @@
       <span>The sketches teach the model <strong>your style</strong>. The photos teach the model <strong>colour distribuition</strong>.</span>
     </div>
     <div class="btn-row">
-      <button class="btn btn-primary" id="btnToTrain" disabled onclick="goStep('train')">Continue to training →</button>
+      <button class="btn btn-primary" id="btnToTrain" disabled onclick="goStep('train')">Continue to training</button>
     </div>
   </section>
 
   <!-- Step 3: Train -->
   <section class="section" id="section-train">
     <h1 class="section-title">Train your <em>model</em></h1>
-    <p class="section-sub">Press the button below and Sketchit will learn from your artwork. This takes a few hours - you can leave it running.</p>
+    <p class="section-sub">Press the button below and Sketchit will learn from your artwork. This takes a few hours, you can leave it running.</p>
 
     <div id="modelStatusBar" class="model-status-bar"></div>
 
@@ -239,7 +239,7 @@
 
     <div class="notice notice-warn" id="trainNotice">
       <span class="notice-icon">⏱</span>
-      <span>Training takes 4–8 hours on a typical laptop CPU. You can close this tab and come back, training will continue in the background.</span>
+      <span>Training takes 4-8 hours on a typical laptop CPU. You can close this tab and come back, training will continue in the background.</span>
     </div>
     <div id="trainDoneNotice" style="display:none">
       <div class="notice notice-success">
@@ -247,7 +247,7 @@
         <span>Training complete! Head to Create to generate your first drawing.</span>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="goStep('generate')">Go to Create →</button>
+        <button class="btn btn-primary" onclick="goStep('generate')">Go to Create</button>
       </div>
     </div>
   </section>
@@ -281,7 +281,7 @@
     </div>
     <div class="notice notice-info" style="margin-top:24px">
       <span class="notice-icon">💡</span>
-      <span>Right-click any image to save it. Each seed produces a unique sketch - click <strong>New sketch</strong> to explore.</span>
+      <span>Right-click any image to save it. Each seed produces a unique sketch, click <strong>New sketch</strong> to explore.</span>
     </div>
   </section>
 
@@ -571,7 +571,7 @@ async function generateSketch() {
     }
   } finally {
     btn.disabled = false;
-    btn.innerHTML = '✦ New sketch';
+    btn.innerHTML = 'New sketch';
   }
 }
 
