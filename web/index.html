@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sketchit - Your Personal Art Generator</title>
+<title>Sketchmind — Your Personal Art Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -18,491 +18,115 @@
     --accent2: #8a9e6e;
     --border: #d4cfc6;
     --radius: 12px;
-    --shadow: 0 2px 16px rgba(26,23,20,0.08);
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; font-size: 15px; line-height: 1.6; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--paper);
-    color: var(--ink);
-    min-height: 100vh;
-    font-size: 15px;
-    line-height: 1.6;
-  }
-
-  /* header */
-  header {
-    padding: 28px 48px;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    border-bottom: 1px solid var(--border);
-    background: var(--paper);
-  }
-  .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 22px;
-    letter-spacing: -0.5px;
-    color: var(--ink);
-  }
+  header { padding: 28px 48px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid var(--border); }
+  .logo { font-family: 'Playfair Display', serif; font-size: 22px; letter-spacing: -0.5px; }
   .logo span { color: var(--accent); font-style: italic; }
-  .tagline {
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: auto;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
+  .tagline { font-size: 12px; color: var(--muted); margin-left: auto; letter-spacing: 0.06em; text-transform: uppercase; }
 
-  /* steps nav */
-  .steps-nav {
-    display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--border);
-    background: var(--paper2);
-    padding: 0 48px;
-    overflow-x: auto;
-  }
-  .step-tab {
-    padding: 14px 24px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: default;
-    white-space: nowrap;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .step-tab.active {
-    color: var(--ink);
-    border-bottom-color: var(--accent);
-  }
-  .step-tab.available {
-    cursor: pointer;
-    color: var(--ink2);
-  }
+  .steps-nav { display: flex; border-bottom: 1px solid var(--border); background: var(--paper2); padding: 0 48px; overflow-x: auto; }
+  .step-tab { padding: 14px 24px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: default; white-space: nowrap; border-bottom: 2px solid transparent; transition: color 0.2s; display: flex; align-items: center; gap: 8px; }
+  .step-tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+  .step-tab.available { cursor: pointer; color: var(--ink2); }
   .step-tab.available:hover { color: var(--accent); }
-  .step-num {
-    width: 20px; height: 20px;
-    border-radius: 50%;
-    background: var(--paper3);
-    border: 1px solid var(--border);
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 500;
-    color: var(--muted);
-    flex-shrink: 0;
-  }
-  .step-tab.active .step-num {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-  .step-tab.done .step-num {
-    background: var(--accent2);
-    border-color: var(--accent2);
-    color: white;
-  }
-  .step-tab.done .step-num::after { content: "✓"; }
+  .step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--paper3); border: 1px solid var(--border); font-size: 11px; display: flex; align-items: center; justify-content: center; font-weight: 500; color: var(--muted); flex-shrink: 0; }
+  .step-tab.active .step-num { background: var(--accent); border-color: var(--accent); color: white; }
+  .step-tab.done .step-num { background: var(--accent2); border-color: var(--accent2); color: white; font-size: 13px; }
   .step-tab.done .step-label { color: var(--ink2); }
 
-  /* ── main */
   main { max-width: 860px; margin: 0 auto; padding: 48px 24px; }
-
-  /* ── section */
-  .section {
-    display: none;
-    animation: fadeIn 0.3s ease;
-  }
+  .section { display: none; animation: fadeIn 0.3s ease; }
   .section.active { display: block; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 32px;
-    font-weight: 400;
-    margin-bottom: 8px;
-    letter-spacing: -0.5px;
-  }
+  .section-title { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 400; margin-bottom: 8px; letter-spacing: -0.5px; }
   .section-title em { color: var(--accent); font-style: italic; }
-  .section-sub {
-    color: var(--muted);
-    font-size: 14px;
-    margin-bottom: 36px;
-    max-width: 560px;
-  }
+  .section-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; max-width: 560px; }
 
-  /* ── agreement */
-  .agreement-box {
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 32px;
-    margin-bottom: 24px;
-    font-size: 14px;
-    line-height: 1.8;
-    color: var(--ink2);
-  }
-  .agreement-box h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 400;
-    margin-bottom: 16px;
-    color: var(--ink);
-  }
+  .agreement-box { background: var(--paper2); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 24px; font-size: 14px; line-height: 1.8; color: var(--ink2); }
+  .agreement-box h3 { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 400; margin-bottom: 16px; color: var(--ink); }
   .agreement-box p { margin-bottom: 12px; }
   .agreement-box ul { padding-left: 20px; }
   .agreement-box ul li { margin-bottom: 6px; }
-  .checkbox-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--border);
-  }
-  .checkbox-row input[type=checkbox] {
-    width: 18px; height: 18px;
-    margin-top: 2px;
-    flex-shrink: 0;
-    accent-color: var(--accent);
-    cursor: pointer;
-  }
-  .checkbox-row label {
-    font-size: 13px;
-    color: var(--ink2);
-    cursor: pointer;
-    line-height: 1.5;
-  }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); }
+  .checkbox-row input[type=checkbox] { width: 18px; height: 18px; margin-top: 2px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
+  .checkbox-row label { font-size: 13px; color: var(--ink2); cursor: pointer; line-height: 1.5; }
 
-  /* ── upload zone */
-  .upload-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-    margin-bottom: 32px;
-  }
+  .upload-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
   @media (max-width: 600px) { .upload-grid { grid-template-columns: 1fr; } }
+  .upload-card { background: var(--paper2); border: 1.5px dashed var(--border); border-radius: var(--radius); padding: 32px 24px; text-align: center; transition: border-color 0.2s, background 0.2s; cursor: pointer; position: relative; }
+  .upload-card:hover, .upload-card.dragover { border-color: var(--accent); background: #fdf5f0; }
+  .upload-card input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .upload-icon { font-size: 36px; margin-bottom: 12px; display: block; }
+  .upload-title { font-family: 'Playfair Display', serif; font-size: 17px; margin-bottom: 6px; }
+  .upload-hint { font-size: 12px; color: var(--muted); margin-bottom: 14px; }
+  .upload-count { display: inline-block; background: var(--paper3); border: 1px solid var(--border); border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 500; color: var(--ink2); margin-top: 8px; transition: background 0.2s, color 0.2s; }
+  .upload-count.has-files { background: var(--accent2); border-color: var(--accent2); color: white; }
 
-  .upload-card {
-    background: var(--paper2);
-    border: 1.5px dashed var(--border);
-    border-radius: var(--radius);
-    padding: 32px 24px;
-    text-align: center;
-    transition: border-color 0.2s, background 0.2s;
-    cursor: pointer;
-    position: relative;
-  }
-  .upload-card:hover, .upload-card.dragover {
-    border-color: var(--accent);
-    background: #fdf5f0;
-  }
-  .upload-card input[type=file] {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    cursor: pointer;
-  }
-  .upload-icon {
-    font-size: 36px;
-    margin-bottom: 12px;
-    display: block;
-  }
-  .upload-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 17px;
-    margin-bottom: 6px;
-    color: var(--ink);
-  }
-  .upload-hint {
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 14px;
-  }
-  .upload-count {
-    display: inline-block;
-    background: var(--paper3);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 3px 12px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--ink2);
-    margin-top: 8px;
-    transition: background 0.2s, color 0.2s;
-  }
-  .upload-count.has-files {
-    background: var(--accent2);
-    border-color: var(--accent2);
-    color: white;
-  }
+  .train-card { background: var(--paper2); border: 1px solid var(--border); border-radius: var(--radius); padding: 32px; margin-bottom: 24px; }
+  .train-card h3 { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 400; margin-bottom: 6px; }
+  .train-card p { font-size: 13px; color: var(--muted); margin-bottom: 20px; max-width: 520px; }
 
-  /* ── train section */
-  .train-card {
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 32px;
-    margin-bottom: 24px;
-  }
-  .train-card h3 {
-    font-family: 'Playfair Display', serif;
-    font-size: 20px;
-    font-weight: 400;
-    margin-bottom: 6px;
-  }
-  .train-card p {
-    font-size: 13px;
-    color: var(--muted);
-    margin-bottom: 20px;
-    max-width: 520px;
-  }
-
-  /* progress */
   .progress-wrap { margin-top: 24px; display: none; }
   .progress-wrap.visible { display: block; }
-  .progress-phase {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--ink2);
-    margin-bottom: 10px;
-    display: flex;
-    justify-content: space-between;
-  }
-  .progress-phase .pct { color: var(--accent); font-weight: 500; }
-  .progress-bar-bg {
-    height: 6px;
-    background: var(--paper3);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-  .progress-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 3px;
-    width: 0%;
-    transition: width 0.4s ease;
-  }
-  .progress-meta {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    color: var(--muted);
-    margin-bottom: 16px;
-  }
-  .phase-steps {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-    flex-wrap: wrap;
-  }
-  .phase-pill {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 500;
-    background: var(--paper3);
-    border: 1px solid var(--border);
-    color: var(--muted);
-    transition: all 0.3s;
-  }
-  .phase-pill.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: white;
-  }
-  .phase-pill.done {
-    background: var(--accent2);
-    border-color: var(--accent2);
-    color: white;
-  }
-  .loss-line {
-    font-family: 'DM Sans', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--paper3);
-    border-radius: 6px;
-    padding: 6px 12px;
-    margin-top: 8px;
-    min-height: 28px;
-    letter-spacing: 0.02em;
-  }
+  .progress-phase { font-size: 13px; font-weight: 500; color: var(--ink2); margin-bottom: 10px; display: flex; justify-content: space-between; }
+  .progress-phase .pct { color: var(--accent); }
+  .progress-bar-bg { height: 6px; background: var(--paper3); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; width: 0%; transition: width 0.4s ease; }
+  .progress-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 16px; }
+  .phase-steps { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .phase-pill { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; background: var(--paper3); border: 1px solid var(--border); color: var(--muted); transition: all 0.3s; }
+  .phase-pill.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .phase-pill.done { background: var(--accent2); border-color: var(--accent2); color: white; }
+  .loss-line { font-family: monospace; font-size: 11px; color: var(--muted); background: var(--paper3); border-radius: 6px; padding: 6px 12px; margin-top: 8px; min-height: 28px; }
+  .time-est { font-size: 12px; color: var(--muted); margin-top: 12px; font-style: italic; }
 
-  /* ── generate section */
-  .generate-layout {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 32px;
-    align-items: start;
-  }
+  .generate-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
   @media (max-width: 620px) { .generate-layout { grid-template-columns: 1fr; } }
+  .canvas-card { background: var(--paper2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; text-align: center; }
+  .canvas-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 12px; font-weight: 500; }
+  .canvas-card img { width: 100%; aspect-ratio: 1; object-fit: contain; border-radius: 8px; background: white; border: 1px solid var(--border); display: block; image-rendering: pixelated; }
+  .canvas-placeholder { width: 100%; aspect-ratio: 1; background: white; border: 1px solid var(--border); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--paper3); font-size: 48px; }
+  .seed-label { font-size: 11px; color: var(--muted); margin-top: 10px; font-family: monospace; }
 
-  .canvas-card {
-    background: var(--paper2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px;
-    text-align: center;
-  }
-  .canvas-card .label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    margin-bottom: 12px;
-    font-weight: 500;
-  }
-  .canvas-card img {
-    width: 100%;
-    aspect-ratio: 1;
-    object-fit: contain;
-    border-radius: 8px;
-    background: white;
-    border: 1px solid var(--border);
-    display: block;
-    image-rendering: pixelated;
-  }
-  .canvas-placeholder {
-    width: 100%;
-    aspect-ratio: 1;
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--paper3);
-    font-size: 48px;
-  }
-  .seed-label {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 10px;
-    font-family: 'DM Sans', monospace;
-  }
-
-  /* ── buttons */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 11px 22px;
-    border-radius: 8px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    border: 1.5px solid transparent;
-    transition: all 0.15s;
-    text-decoration: none;
-  }
-  .btn-primary {
-    background: var(--ink);
-    color: white;
-    border-color: var(--ink);
-  }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; border: 1.5px solid transparent; transition: all 0.15s; text-decoration: none; }
+  .btn-primary { background: var(--ink); color: white; border-color: var(--ink); }
   .btn-primary:hover { background: var(--ink2); }
-  .btn-primary:disabled {
-    background: var(--paper3);
-    border-color: var(--paper3);
-    color: var(--muted);
-    cursor: not-allowed;
-  }
-  .btn-secondary {
-    background: transparent;
-    color: var(--ink2);
-    border-color: var(--border);
-  }
+  .btn-primary:disabled { background: var(--paper3); border-color: var(--paper3); color: var(--muted); cursor: not-allowed; }
+  .btn-secondary { background: transparent; color: var(--ink2); border-color: var(--border); }
   .btn-secondary:hover { border-color: var(--ink2); background: var(--paper2); }
-  .btn-secondary:disabled {
-    color: var(--muted);
-    border-color: var(--border);
-    cursor: not-allowed;
-  }
-  .btn-accent {
-    background: var(--accent);
-    color: white;
-    border-color: var(--accent);
-  }
+  .btn-secondary:disabled { color: var(--muted); border-color: var(--border); cursor: not-allowed; }
+  .btn-accent { background: var(--accent); color: white; border-color: var(--accent); }
   .btn-accent:hover { background: #b3541f; }
-  .btn-accent:disabled {
-    background: var(--paper3);
-    border-color: var(--paper3);
-    color: var(--muted);
-    cursor: not-allowed;
-  }
+  .btn-accent:disabled { background: var(--paper3); border-color: var(--paper3); color: var(--muted); cursor: not-allowed; }
   .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 
-  /* ── notice/alert */
-  .notice {
-    padding: 12px 16px;
-    border-radius: 8px;
-    font-size: 13px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
+  .notice { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: flex-start; gap: 10px; }
   .notice-info { background: #eef3fb; color: #2a5298; border: 1px solid #c2d4f0; }
   .notice-warn { background: #fef8ec; color: #7a5a00; border: 1px solid #f0dfa0; }
   .notice-success { background: #eef6ee; color: #2a6030; border: 1px solid #b8ddb8; }
   .notice-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
 
-  /* ── locked overlay */
-  .locked {
-    opacity: 0.45;
-    pointer-events: none;
-    filter: grayscale(0.3);
-  }
+  .model-status-bar { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--paper2); color: var(--muted); }
+  .status-pill.ready { background: #eef6ee; border-color: #b8ddb8; color: #2a6030; }
+  .status-pill .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--paper3); flex-shrink: 0; }
+  .status-pill.ready .dot { background: #2a6030; }
 
-  /* ── spinner */
   @keyframes spin { to { transform: rotate(360deg); } }
-  .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-    flex-shrink: 0;
-  }
-  .spinner-dark {
-    border-color: rgba(26,23,20,0.15);
-    border-top-color: var(--ink);
-  }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; flex-shrink: 0; }
+  .spinner-dark { border-color: rgba(26,23,20,0.15); border-top-color: var(--ink); }
 
-  /* ── time estimate */
-  .time-est {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 12px;
-    font-style: italic;
-  }
-
-  /* ── footer */
-  footer {
-    text-align: center;
-    padding: 32px;
-    font-size: 11px;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    margin-top: 80px;
-  }
+  footer { text-align: center; padding: 32px; font-size: 11px; color: var(--muted); border-top: 1px solid var(--border); margin-top: 80px; }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">Sketch<span>it</span></div>
+  <div class="logo">Sketch<span>mind</span></div>
   <div class="tagline">Your art · Your model · Your creativity</div>
 </header>
 
@@ -527,111 +151,83 @@
 
 <main>
 
-  <!-- ── Step 1: Agreement -->
+  <!-- Step 1: Agreement -->
   <section class="section active" id="section-agreement">
     <h1 class="section-title">Before we begin</h1>
-    <p class="section-sub">Sketchit is built on a simple principle: the AI learns only from your art, with your full knowledge and consent.</p>
-
+    <p class="section-sub">Sketchmind is built on a simple principle: the AI learns only from your art, with your full knowledge and consent.</p>
     <div class="agreement-box">
       <h3>Intellectual Property Agreement</h3>
-      <p>By using Sketchit, you confirm and agree to the following:</p>
+      <p>By using Sketchmind, you confirm and agree to the following:</p>
       <ul>
         <li>All images you upload to train the model are <strong>your own original work</strong>.</li>
-        <li>You are the <strong>sole intellectual property owner</strong> of all uploaded artwork, or you have explicit written permission from the rights holder to use it for this purpose.</li>
+        <li>You are the <strong>sole intellectual property owner</strong> of all uploaded artwork, or you have explicit written permission from the rights holder.</li>
         <li>You have <strong>not uploaded</strong> artwork created by other artists, sourced from the internet, or otherwise obtained without full rights and permissions.</li>
         <li>You understand that this tool is designed to learn from and extend <strong>your personal creative style</strong>, not to reproduce or appropriate the work of others.</li>
         <li>The generated outputs are derivatives of your own work and remain subject to your own creative ownership.</li>
-        <li>You will not use this tool to infringe on the intellectual property rights of any third party.</li>
       </ul>
       <div class="checkbox-row">
         <input type="checkbox" id="agreeCheck">
-        <label for="agreeCheck">
-          I confirm that all artwork I will upload is my own original work, that I own the intellectual property rights to it, and that I agree to the terms above.
-        </label>
+        <label for="agreeCheck">I confirm that all artwork I will upload is my own original work, that I own the intellectual property rights to it, and that I agree to the terms above.</label>
       </div>
     </div>
-
     <div class="btn-row">
-      <button class="btn btn-primary" id="btnAgree" disabled onclick="signAgreement()">
-        I agree
-      </button>
+      <button class="btn btn-primary" id="btnAgree" disabled onclick="signAgreement()">I agree — let's begin</button>
     </div>
   </section>
 
-  <!-- ── Step 2: Upload -->
+  <!-- Step 2: Upload -->
   <section class="section" id="section-upload">
     <h1 class="section-title">Upload your <em>artwork</em></h1>
-    <p class="section-sub">Upload two sets of images: your personal sketches or drawings, and reference photographs for the colour model. Up to 100 images each.</p>
-
+    <p class="section-sub">Upload your sketches and flower photos. Up to 100 images each.</p>
     <div class="upload-grid">
-      <!-- Sketches -->
-      <div class="upload-card" id="dropSketches"
-           ondragover="dragOver(event,'dropSketches')"
-           ondragleave="dragLeave('dropSketches')"
-           ondrop="dropFiles(event,'sketches')">
-        <input type="file" id="inputSketches" multiple accept="image/*"
-               onchange="filesSelected(this,'sketches')">
+      <div class="upload-card" id="dropSketches" ondragover="dragOver(event,'dropSketches')" ondragleave="dragLeave('dropSketches')" ondrop="dropFiles(event,'sketches')">
+        <input type="file" id="inputSketches" multiple accept="image/*" onchange="filesSelected(this,'sketches')">
         <span class="upload-icon">✏️</span>
         <div class="upload-title">Your sketches</div>
-        <div class="upload-hint">Drag &amp; drop or click to browse<br>JPG, PNG, BMP up to 100 images</div>
+        <div class="upload-hint">Drag & drop or click to browse<br>JPG, PNG, BMP — up to 100 images</div>
         <span class="upload-count" id="countSketches">0 images</span>
       </div>
-
-      <!-- Photos -->
-      <div class="upload-card" id="dropPhotos"
-           ondragover="dragOver(event,'dropPhotos')"
-           ondragleave="dragLeave('dropPhotos')"
-           ondrop="dropFiles(event,'photos')">
-        <input type="file" id="inputPhotos" multiple accept="image/*"
-               onchange="filesSelected(this,'photos')">
+      <div class="upload-card" id="dropPhotos" ondragover="dragOver(event,'dropPhotos')" ondragleave="dragLeave('dropPhotos')" ondrop="dropFiles(event,'photos')">
+        <input type="file" id="inputPhotos" multiple accept="image/*" onchange="filesSelected(this,'photos')">
         <span class="upload-icon">🌸</span>
-        <div class="upload-title">Photos</div>
-        <div class="upload-hint">Reference photographs for colour<br>JPG, PNG, BMP up to 100 images</div>
+        <div class="upload-title">Flower photos</div>
+        <div class="upload-hint">Reference photographs for colour<br>JPG, PNG, BMP — up to 100 images</div>
         <span class="upload-count" id="countPhotos">0 images</span>
       </div>
     </div>
-
     <div class="notice notice-info">
       <span class="notice-icon">ℹ</span>
-      <span>The sketches teach the model <strong>your style</strong>. The photos teach it <strong>colour</strong> , they're just colour references from your real-world images.</span>
+      <span>The sketches teach the model <strong>your style</strong>. The flower photos teach it <strong>colour</strong> — these don't have to be your own work, they're just colour references from nature.</span>
     </div>
-
     <div class="btn-row">
-      <button class="btn btn-primary" id="btnToTrain" disabled onclick="goStep('train')">
-        Continue to training
-      </button>
+      <button class="btn btn-primary" id="btnToTrain" disabled onclick="goStep('train')">Continue to training →</button>
     </div>
   </section>
 
   <!-- Step 3: Train -->
   <section class="section" id="section-train">
     <h1 class="section-title">Train your <em>model</em></h1>
-    <p class="section-sub">Press the button below and Sketchit will learn from your artwork. This takes a few hours, you can leave it running.</p>
+    <p class="section-sub">Press the button below and Sketchmind will learn from your artwork. This takes a few hours — you can leave it running.</p>
+
+    <div id="modelStatusBar" class="model-status-bar"></div>
 
     <div class="train-card" id="trainCard">
-      <h3>Ready to learn</h3>
-      <p>The training happens in three stages: first it learns your sketch style, then it studies photo colours, then it learns to combine both. You'll see progress below.</p>
-
+      <h3 id="trainCardTitle">Ready to learn</h3>
+      <p id="trainCardDesc">The training happens in three stages: first it learns your sketch style, then it studies flower colours, then it learns to combine both.</p>
       <div class="phase-steps">
         <span class="phase-pill" id="pill-sketches">1 · Your sketch style</span>
-        <span class="phase-pill" id="pill-photos">2 · Colour from photos</span>
+        <span class="phase-pill" id="pill-photos">2 · Colour from nature</span>
         <span class="phase-pill" id="pill-colorizer">3 · Combining both</span>
       </div>
-
       <div class="btn-row" id="trainBtnRow">
-        <button class="btn btn-accent" id="btnTrain" onclick="startTraining()">
-          Start training
-        </button>
+        <button class="btn btn-accent" id="btnTrain" onclick="startTraining()">Start training</button>
       </div>
-
       <div class="progress-wrap" id="progressWrap">
         <div class="progress-phase">
           <span id="progressPhaseLabel">—</span>
           <span class="pct" id="progressPct">0%</span>
         </div>
-        <div class="progress-bar-bg">
-          <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
+        <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill"></div></div>
         <div class="progress-meta">
           <span id="progressEpoch">Epoch 0 / 0</span>
           <span id="progressTime">—</span>
@@ -643,24 +239,25 @@
 
     <div class="notice notice-warn" id="trainNotice">
       <span class="notice-icon">⏱</span>
-      <span>Training takes 4–8 hours on a typical laptop CPU. You can close this tab and come back, training continues in the background. Refresh the page to check progress.</span>
+      <span>Training takes 4–8 hours on a typical laptop CPU. You can close this tab and come back — training continues in the background.</span>
     </div>
-
     <div id="trainDoneNotice" style="display:none">
       <div class="notice notice-success">
         <span class="notice-icon">✓</span>
-        <span>Training complete! Your model is ready. Head to the Create section to generate your first drawing.</span>
+        <span>Training complete! Head to Create to generate your first flower.</span>
       </div>
       <div class="btn-row">
-        <button class="btn btn-primary" onclick="goStep('generate')">Go to Create </button>
+        <button class="btn btn-primary" onclick="goStep('generate')">Go to Create →</button>
       </div>
     </div>
   </section>
 
   <!-- Step 4: Generate -->
   <section class="section" id="section-generate">
-    <h1 class="section-title">Create a <em>drawing</em></h1>
-    <p class="section-sub">Generate a sketch in your style, then colourize it with what the model learned from photos.</p>
+    <h1 class="section-title">Create a <em>flower</em></h1>
+    <p class="section-sub">Generate a sketch in your style, then colourize it with what the model learned from nature.</p>
+
+    <div id="generateStatusBar" class="model-status-bar" style="margin-bottom:20px"></div>
 
     <div class="generate-layout">
       <div class="canvas-card">
@@ -669,76 +266,57 @@
         <img id="sketchImg" style="display:none" alt="Generated sketch">
         <div class="seed-label" id="seedLabel"></div>
         <div class="btn-row" style="justify-content:center; margin-top:14px">
-          <button class="btn btn-primary" id="btnGenerate" onclick="generateSketch()">
-            New sketch
-          </button>
+          <button class="btn btn-primary" id="btnGenerate" onclick="generateSketch()">✦ New sketch</button>
         </div>
       </div>
-
       <div class="canvas-card">
         <div class="label">Colourized</div>
         <div id="colorPlaceholder" class="canvas-placeholder" style="color:#e8e0d4">🎨</div>
-        <img id="colorImg" style="display:none" alt="Colourized drawing">
+        <img id="colorImg" style="display:none" alt="Colourized flower">
         <div class="btn-row" style="justify-content:center; margin-top:14px">
-          <button class="btn btn-secondary" id="btnColorize" disabled onclick="colorizeSketch()">
-            Color it
-          </button>
+          <button class="btn btn-secondary" id="btnColorize" disabled onclick="colorizeSketch()">Color it</button>
         </div>
+        <div id="noColorizerHint" style="display:none; font-size:11px; color:var(--muted); margin-top:8px; text-align:center">Colorizer not trained yet</div>
       </div>
     </div>
-
     <div class="notice notice-info" style="margin-top:24px">
       <span class="notice-icon">💡</span>
-      <span>Each sketch is unique, click <strong>New sketch</strong> to generate different drawings. Then hit <strong>Color it</strong> to see it come alive. Right-click any image to save it.</span>
+      <span>Right-click any image to save it. Each seed produces a unique flower — click <strong>New sketch</strong> to explore.</span>
     </div>
   </section>
 
 </main>
 
-<footer>
-  Sketchit · Your art, your model, your colours · No third-party artwork used
-</footer>
+<footer>Sketchmind · Your art, your model, your colours · No third-party artwork used</footer>
 
 <script>
-// ── State
 let currentSeed = null;
 let sketchCount = 0;
 let photoCount  = 0;
-let trainingActive = false;
-let trainingDone   = false;
-let phaseHistory   = [];
+let modelStatus = { sketch_ready: false, colorizer_ready: false, fully_trained: false };
 
 const phaseLabels = {
-  "sketches":     "Learning your sketch style",
-  "photos_prep":  "Preparing colour references",
-  "photos":       "Learning colours from nature",
-  "colorizer":    "Training the colorizer",
-  "done":         "Training complete!",
-  "error":        "Error during training"
+  sketches:    "Learning your sketch style",
+  photos_prep: "Preparing colour references",
+  photos:      "Learning colours from nature",
+  colorizer:   "Training the colorizer",
+  done:        "Training complete!",
+  error:       "Error during training"
 };
+const pillMap = { sketches: "pill-sketches", photos: "pill-photos", photos_prep: "pill-photos", colorizer: "pill-colorizer" };
 
-const pillMap = {
-  "sketches":   "pill-sketches",
-  "photos":     "pill-photos",
-  "photos_prep":"pill-photos",
-  "colorizer":  "pill-colorizer",
-};
+// ── Init ──────────────────────────────────────────────────────────────────────
 
-// ── Init
 window.onload = async () => {
-  await checkAgreement();
+  const agreed = await checkAgreement();
+  if (!agreed) return;
+
   await checkCounts();
-  await checkTrained();
-  if (trainingDone) {
-    markStepDone('agreement');
-    markStepDone('upload');
-    markStepDone('train');
-    enableStep('generate');
-    goStep('generate');
-  }
+  await refreshStatus();
 };
 
-// ── Agreement
+// ── Agreement ─────────────────────────────────────────────────────────────────
+
 document.getElementById('agreeCheck').addEventListener('change', function() {
   document.getElementById('btnAgree').disabled = !this.checked;
 });
@@ -746,64 +324,129 @@ document.getElementById('agreeCheck').addEventListener('change', function() {
 async function checkAgreement() {
   const r = await fetch('/api/agreement').then(r => r.json());
   if (r.signed) {
-    document.getElementById('btnAgree').textContent = 'Agreed ✓';
-    document.getElementById('btnAgree').disabled = false;
     markStepDone('agreement');
     enableStep('upload');
+    enableStep('train');
+    return true;
   }
+  return false;
 }
 
 async function signAgreement() {
   await fetch('/api/agreement', { method: 'POST' });
   markStepDone('agreement');
   enableStep('upload');
+  enableStep('train');
+  await checkCounts();
+  await refreshStatus();
   goStep('upload');
 }
 
-// Step navigation
+// ── Status ────────────────────────────────────────────────────────────────────
+
+async function refreshStatus() {
+  const r = await fetch('/api/status').then(r => r.json());
+  modelStatus = r;
+
+  renderStatusBar('modelStatusBar', r);
+  renderStatusBar('generateStatusBar', r);
+
+  if (r.sketch_ready) {
+    markStepDone('upload');
+    markStepDone('train');
+    enableStep('generate');
+
+    // Update train card to reflect existing models
+    document.getElementById('trainCardTitle').textContent = 'Models detected';
+    document.getElementById('trainCardDesc').textContent =
+      `Found: ${r.sketch_ckpt_name || 'sketch model'}${r.colorizer_ready ? ' + colorizer' : ''}. You can go straight to Create, or retrain from scratch.`;
+
+    if (r.fully_trained) {
+      document.getElementById('trainDoneNotice').style.display = 'block';
+      document.getElementById('trainNotice').style.display = 'none';
+      markPillDone(['pill-sketches', 'pill-photos', 'pill-colorizer']);
+    } else if (r.colorizer_ready) {
+      markPillDone(['pill-sketches', 'pill-photos', 'pill-colorizer']);
+    } else {
+      markPillDone(['pill-sketches', 'pill-photos']);
+    }
+
+    // If fully ready, jump straight to generate after agreement
+    goStep('generate');
+  }
+
+  // If training was already running, reconnect
+  if (r.training && r.training.running) {
+    document.getElementById('progressWrap').classList.add('visible');
+    document.getElementById('btnTrain').disabled = true;
+    document.getElementById('btnTrain').innerHTML = '<span class="spinner"></span> Training...';
+    listenTraining();
+  }
+}
+
+function renderStatusBar(id, r) {
+  const bar = document.getElementById(id);
+  if (!bar) return;
+  bar.innerHTML = `
+    <span class="status-pill ${r.sketch_ready ? 'ready' : ''}">
+      <span class="dot"></span>
+      Sketch model: ${r.sketch_ready ? (r.sketch_ckpt_name || 'ready') : 'not trained'}
+    </span>
+    <span class="status-pill ${r.colorizer_ready ? 'ready' : ''}">
+      <span class="dot"></span>
+      Colorizer: ${r.colorizer_ready ? (r.colorizer_ckpt_name || 'ready') : 'not trained'}
+    </span>
+  `;
+}
+
+function markPillDone(ids) {
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('active'); el.classList.add('done'); }
+  });
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+
 function goStep(step) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.step-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('section-' + step).classList.add('active');
-  document.querySelector(`[data-step="${step}"]`).classList.add('active');
+  const tab = document.querySelector(`[data-step="${step}"]`);
+  if (tab) tab.classList.add('active');
 }
 
 function enableStep(step) {
   const tab = document.querySelector(`[data-step="${step}"]`);
+  if (!tab) return;
   tab.classList.add('available');
   tab.onclick = () => goStep(step);
 }
 
 function markStepDone(step) {
   const tab = document.querySelector(`[data-step="${step}"]`);
+  if (!tab) return;
   tab.classList.add('done', 'available');
-  document.getElementById('sn-' + step).textContent = '';
+  const sn = document.getElementById('sn-' + step);
+  if (sn) sn.textContent = '✓';
   tab.onclick = () => goStep(step);
 }
 
-// Uploads
-function dragOver(e, id) {
-  e.preventDefault();
-  document.getElementById(id).classList.add('dragover');
-}
-function dragLeave(id) {
-  document.getElementById(id).classList.remove('dragover');
-}
+// ── Uploads ───────────────────────────────────────────────────────────────────
+
+function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
+function dragLeave(id) { document.getElementById(id).classList.remove('dragover'); }
 function dropFiles(e, type) {
   e.preventDefault();
-  const id = type === 'sketches' ? 'dropSketches' : 'dropPhotos';
-  document.getElementById(id).classList.remove('dragover');
+  document.getElementById(type === 'sketches' ? 'dropSketches' : 'dropPhotos').classList.remove('dragover');
   uploadFiles([...e.dataTransfer.files], type);
 }
-function filesSelected(input, type) {
-  uploadFiles([...input.files], type);
-}
+function filesSelected(input, type) { uploadFiles([...input.files], type); }
 
 async function uploadFiles(files, type) {
   const fd = new FormData();
-  const limited = files.slice(0, 100);
-  limited.forEach(f => fd.append('files', f));
-  const r = await fetch(`/api/upload/${type}`, { method: 'POST', body: fd }).then(r => r.json());
+  files.slice(0, 100).forEach(f => fd.append('files', f));
+  await fetch(`/api/upload/${type}`, { method: 'POST', body: fd });
   await checkCounts();
 }
 
@@ -812,35 +455,27 @@ async function checkCounts() {
     fetch('/api/count/sketches').then(r => r.json()),
     fetch('/api/count/photos').then(r => r.json()),
   ]);
-  sketchCount = s.count;
-  photoCount  = p.count;
-
+  sketchCount = s.count; photoCount = p.count;
   const cs = document.getElementById('countSketches');
   cs.textContent = sketchCount + ' image' + (sketchCount !== 1 ? 's' : '');
   cs.classList.toggle('has-files', sketchCount > 0);
-
   const cp = document.getElementById('countPhotos');
   cp.textContent = photoCount + ' image' + (photoCount !== 1 ? 's' : '');
   cp.classList.toggle('has-files', photoCount > 0);
-
-  const canTrain = sketchCount >= 10 && photoCount >= 5;
-  document.getElementById('btnToTrain').disabled = !canTrain;
-  if (canTrain) enableStep('train');
+  document.getElementById('btnToTrain').disabled = !(sketchCount >= 10 && photoCount >= 5);
 }
 
-// Training
+// ── Training ──────────────────────────────────────────────────────────────────
+
 async function startTraining() {
   document.getElementById('btnTrain').disabled = true;
   document.getElementById('btnTrain').innerHTML = '<span class="spinner"></span> Training...';
   document.getElementById('progressWrap').classList.add('visible');
-  trainingActive = true;
-
   await fetch('/api/train', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ sketch_epochs: 2000, photo_epochs: 2000, colorizer_epochs: 500 })
   });
-
   listenTraining();
 }
 
@@ -849,111 +484,72 @@ function listenTraining() {
   es.onmessage = (e) => {
     const d = JSON.parse(e.data);
     updateProgress(d);
-    if (d.phase === 'done') {
-      es.close();
-      onTrainingDone();
-    } else if (d.phase === 'error') {
-      es.close();
-      showTrainingError(d.error);
-    }
+    if (d.phase === 'done') { es.close(); onTrainingDone(); }
+    else if (d.phase === 'error') { es.close(); showError(d.error); }
   };
   es.onerror = () => es.close();
 }
 
 function updateProgress(d) {
   const pct = d.total > 0 ? Math.round((d.epoch / d.total) * 100) : 0;
-
-  document.getElementById('progressPhaseLabel').textContent =
-    phaseLabels[d.phase] || d.phase;
+  document.getElementById('progressPhaseLabel').textContent = phaseLabels[d.phase] || d.phase;
   document.getElementById('progressPct').textContent = pct + '%';
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressEpoch').textContent =
-    `Epoch ${d.epoch} / ${d.total}`;
-
+  document.getElementById('progressEpoch').textContent = `Epoch ${d.epoch} / ${d.total}`;
   if (d.loss) document.getElementById('lossLine').textContent = d.loss;
   if (d.message) document.getElementById('progressPhaseLabel').textContent = d.message;
 
-  // Phase pills
   ['sketches','photos','colorizer'].forEach(p => {
     const pill = document.getElementById('pill-' + p);
-    if (!pill) return;
-    pill.classList.remove('active', 'done');
+    if (pill) pill.classList.remove('active', 'done');
   });
-  const activePill = pillMap[d.phase];
-  if (activePill) document.getElementById(activePill).classList.add('active');
-
-  // Mark previous phases done
   const order = ['sketches','photos','colorizer'];
   const idx = order.indexOf(d.phase);
+  const activePill = pillMap[d.phase];
+  if (activePill) document.getElementById(activePill)?.classList.add('active');
   order.forEach((p, i) => {
-    const pill = document.getElementById('pill-' + p);
-    if (!pill) return;
-    if (i < idx) { pill.classList.remove('active'); pill.classList.add('done'); }
+    if (i < idx) { const el = document.getElementById('pill-' + p); if (el) { el.classList.remove('active'); el.classList.add('done'); } }
   });
 
-  // Time estimate
-  if (d.total > 0 && d.epoch > 0) {
-    const elapsed = (Date.now() / 1000) - (d.start_time || 0);
+  if (d.total > 0 && d.epoch > 0 && d.start_time) {
+    const elapsed = Date.now() / 1000 - d.start_time;
     const perEpoch = elapsed / d.epoch;
     const remaining = perEpoch * (d.total - d.epoch);
-    document.getElementById('progressTime').textContent =
-      'Epoch ' + d.epoch + ' of ' + d.total;
-    document.getElementById('timeEst').textContent =
-      remaining > 0 ? '~' + formatTime(remaining) + ' remaining in this phase' : '';
+    document.getElementById('timeEst').textContent = remaining > 0 ? '~' + formatTime(remaining) + ' remaining in this phase' : '';
   }
 }
 
-function formatTime(secs) {
-  if (secs < 60) return Math.round(secs) + 's';
-  if (secs < 3600) return Math.round(secs / 60) + ' min';
-  return (secs / 3600).toFixed(1) + ' hrs';
+function formatTime(s) {
+  if (s < 60) return Math.round(s) + 's';
+  if (s < 3600) return Math.round(s / 60) + ' min';
+  return (s / 3600).toFixed(1) + ' hrs';
 }
 
 function onTrainingDone() {
-  trainingDone = true;
   document.getElementById('progressFill').style.width = '100%';
   document.getElementById('progressPct').textContent = '100%';
-  ['pill-sketches','pill-photos','pill-colorizer'].forEach(id => {
-    const el = document.getElementById(id);
-    el.classList.remove('active');
-    el.classList.add('done');
-  });
+  markPillDone(['pill-sketches','pill-photos','pill-colorizer']);
   document.getElementById('trainDoneNotice').style.display = 'block';
   document.getElementById('trainNotice').style.display = 'none';
   document.getElementById('btnTrain').style.display = 'none';
   markStepDone('train');
   enableStep('generate');
+  refreshStatus();
 }
 
-function showTrainingError(err) {
-  document.getElementById('lossLine').textContent = 'Error: ' + err;
-  document.getElementById('lossLine').style.color = '#c0392b';
+function showError(err) {
+  const ll = document.getElementById('lossLine');
+  ll.textContent = 'Error: ' + err;
+  ll.style.color = '#c0392b';
 }
 
-async function checkTrained() {
-  const r = await fetch('/api/trained').then(r => r.json());
-  if (r.trained) {
-    trainingDone = true;
-    onTrainingDone();
-  } else {
-    // Check if currently training
-    const s = await fetch('/api/train/status').then(r => r.json());
-    if (s.running) {
-      document.getElementById('progressWrap').classList.add('visible');
-      document.getElementById('btnTrain').disabled = true;
-      document.getElementById('btnTrain').innerHTML = '<span class="spinner"></span> Training...';
-      listenTraining();
-    }
-  }
-}
+// ── Generation ────────────────────────────────────────────────────────────────
 
-// Generation
 async function generateSketch() {
   const btn = document.getElementById('btnGenerate');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner spinner-dark"></span> Generating...';
+  btn.innerHTML = '<span class="spinner spinner-dark"></span>';
   document.getElementById('btnColorize').disabled = true;
-
   document.getElementById('colorPlaceholder').style.display = 'flex';
   document.getElementById('colorImg').style.display = 'none';
 
@@ -961,13 +557,18 @@ async function generateSketch() {
     const r = await fetch('/api/generate/sketch', { method: 'POST' }).then(r => r.json());
     if (r.error) { alert(r.error); return; }
     currentSeed = r.seed;
-
     const img = document.getElementById('sketchImg');
     img.src = r.image + '?t=' + Date.now();
     img.style.display = 'block';
     document.getElementById('sketchPlaceholder').style.display = 'none';
     document.getElementById('seedLabel').textContent = 'seed ' + r.seed;
-    document.getElementById('btnColorize').disabled = false;
+
+    if (modelStatus.colorizer_ready) {
+      document.getElementById('btnColorize').disabled = false;
+      document.getElementById('noColorizerHint').style.display = 'none';
+    } else {
+      document.getElementById('noColorizerHint').style.display = 'block';
+    }
   } finally {
     btn.disabled = false;
     btn.innerHTML = '✦ New sketch';
@@ -979,7 +580,6 @@ async function colorizeSketch() {
   const btn = document.getElementById('btnColorize');
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner spinner-dark"></span>';
-
   try {
     const r = await fetch('/api/generate/color', {
       method: 'POST',
@@ -987,7 +587,6 @@ async function colorizeSketch() {
       body: JSON.stringify({ seed: currentSeed })
     }).then(r => r.json());
     if (r.error) { alert(r.error); return; }
-
     const img = document.getElementById('colorImg');
     img.src = r.image + '?t=' + Date.now();
     img.style.display = 'block';
