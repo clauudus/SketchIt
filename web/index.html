@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sketchmind — Your Personal Art Generator</title>
+<title>Sketchit - Your Personal Art Generator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -126,7 +126,7 @@
 <body>
 
 <header>
-  <div class="logo">Sketch<span>mind</span></div>
+  <div class="logo">Sketch<span>it</span></div>
   <div class="tagline">Your art · Your model · Your creativity</div>
 </header>
 
@@ -154,10 +154,10 @@
   <!-- Step 1: Agreement -->
   <section class="section active" id="section-agreement">
     <h1 class="section-title">Before we begin</h1>
-    <p class="section-sub">Sketchmind is built on a simple principle: the AI learns only from your art, with your full knowledge and consent.</p>
+    <p class="section-sub">Sketchit is built on a simple principle: the AI learns only from your art, with your full knowledge and consent.</p>
     <div class="agreement-box">
       <h3>Intellectual Property Agreement</h3>
-      <p>By using Sketchmind, you confirm and agree to the following:</p>
+      <p>By using Sketchit, you confirm and agree to the following:</p>
       <ul>
         <li>All images you upload to train the model are <strong>your own original work</strong>.</li>
         <li>You are the <strong>sole intellectual property owner</strong> of all uploaded artwork, or you have explicit written permission from the rights holder.</li>
@@ -178,7 +178,7 @@
   <!-- Step 2: Upload -->
   <section class="section" id="section-upload">
     <h1 class="section-title">Upload your <em>artwork</em></h1>
-    <p class="section-sub">Upload your sketches and flower photos. Up to 100 images each.</p>
+    <p class="section-sub">Upload your sketches and photos. Up to 100 images each.</p>
     <div class="upload-grid">
       <div class="upload-card" id="dropSketches" ondragover="dragOver(event,'dropSketches')" ondragleave="dragLeave('dropSketches')" ondrop="dropFiles(event,'sketches')">
         <input type="file" id="inputSketches" multiple accept="image/*" onchange="filesSelected(this,'sketches')">
@@ -190,14 +190,14 @@
       <div class="upload-card" id="dropPhotos" ondragover="dragOver(event,'dropPhotos')" ondragleave="dragLeave('dropPhotos')" ondrop="dropFiles(event,'photos')">
         <input type="file" id="inputPhotos" multiple accept="image/*" onchange="filesSelected(this,'photos')">
         <span class="upload-icon">🌸</span>
-        <div class="upload-title">Flower photos</div>
+        <div class="upload-title">Your phhotos</div>
         <div class="upload-hint">Reference photographs for colour<br>JPG, PNG, BMP — up to 100 images</div>
         <span class="upload-count" id="countPhotos">0 images</span>
       </div>
     </div>
     <div class="notice notice-info">
       <span class="notice-icon">ℹ</span>
-      <span>The sketches teach the model <strong>your style</strong>. The flower photos teach it <strong>colour</strong> — these don't have to be your own work, they're just colour references from nature.</span>
+      <span>The sketches teach the model <strong>your style</strong>. The photos teach the model <strong>colour distribuition</strong>.</span>
     </div>
     <div class="btn-row">
       <button class="btn btn-primary" id="btnToTrain" disabled onclick="goStep('train')">Continue to training →</button>
@@ -207,13 +207,13 @@
   <!-- Step 3: Train -->
   <section class="section" id="section-train">
     <h1 class="section-title">Train your <em>model</em></h1>
-    <p class="section-sub">Press the button below and Sketchmind will learn from your artwork. This takes a few hours — you can leave it running.</p>
+    <p class="section-sub">Press the button below and Sketchit will learn from your artwork. This takes a few hours - you can leave it running.</p>
 
     <div id="modelStatusBar" class="model-status-bar"></div>
 
     <div class="train-card" id="trainCard">
       <h3 id="trainCardTitle">Ready to learn</h3>
-      <p id="trainCardDesc">The training happens in three stages: first it learns your sketch style, then it studies flower colours, then it learns to combine both.</p>
+      <p id="trainCardDesc">The training happens in three stages: first it learns your sketch style, then it studies photo colours, then it learns to combine both.</p>
       <div class="phase-steps">
         <span class="phase-pill" id="pill-sketches">1 · Your sketch style</span>
         <span class="phase-pill" id="pill-photos">2 · Colour from nature</span>
@@ -239,12 +239,12 @@
 
     <div class="notice notice-warn" id="trainNotice">
       <span class="notice-icon">⏱</span>
-      <span>Training takes 4–8 hours on a typical laptop CPU. You can close this tab and come back — training continues in the background.</span>
+      <span>Training takes 4–8 hours on a typical laptop CPU. You can close this tab and come back, training will continue in the background.</span>
     </div>
     <div id="trainDoneNotice" style="display:none">
       <div class="notice notice-success">
         <span class="notice-icon">✓</span>
-        <span>Training complete! Head to Create to generate your first flower.</span>
+        <span>Training complete! Head to Create to generate your first drawing.</span>
       </div>
       <div class="btn-row">
         <button class="btn btn-primary" onclick="goStep('generate')">Go to Create →</button>
@@ -254,7 +254,7 @@
 
   <!-- Step 4: Generate -->
   <section class="section" id="section-generate">
-    <h1 class="section-title">Create a <em>flower</em></h1>
+    <h1 class="section-title">Create a <em>drawing/em></h1>
     <p class="section-sub">Generate a sketch in your style, then colourize it with what the model learned from nature.</p>
 
     <div id="generateStatusBar" class="model-status-bar" style="margin-bottom:20px"></div>
@@ -266,13 +266,13 @@
         <img id="sketchImg" style="display:none" alt="Generated sketch">
         <div class="seed-label" id="seedLabel"></div>
         <div class="btn-row" style="justify-content:center; margin-top:14px">
-          <button class="btn btn-primary" id="btnGenerate" onclick="generateSketch()">✦ New sketch</button>
+          <button class="btn btn-primary" id="btnGenerate" onclick="generateSketch()">New sketch</button>
         </div>
       </div>
       <div class="canvas-card">
         <div class="label">Colourized</div>
         <div id="colorPlaceholder" class="canvas-placeholder" style="color:#e8e0d4">🎨</div>
-        <img id="colorImg" style="display:none" alt="Colourized flower">
+        <img id="colorImg" style="display:none" alt="Colourized sketch">
         <div class="btn-row" style="justify-content:center; margin-top:14px">
           <button class="btn btn-secondary" id="btnColorize" disabled onclick="colorizeSketch()">Color it</button>
         </div>
@@ -281,13 +281,13 @@
     </div>
     <div class="notice notice-info" style="margin-top:24px">
       <span class="notice-icon">💡</span>
-      <span>Right-click any image to save it. Each seed produces a unique flower — click <strong>New sketch</strong> to explore.</span>
+      <span>Right-click any image to save it. Each seed produces a unique sketch - click <strong>New sketch</strong> to explore.</span>
     </div>
   </section>
 
 </main>
 
-<footer>Sketchmind · Your art, your model, your colours · No third-party artwork used</footer>
+<footer>Sketchit · Your art, your model, your colours · No third-party artwork used</footer>
 
 <script>
 let currentSeed = null;
@@ -305,7 +305,7 @@ const phaseLabels = {
 };
 const pillMap = { sketches: "pill-sketches", photos: "pill-photos", photos_prep: "pill-photos", colorizer: "pill-colorizer" };
 
-// ── Init ──────────────────────────────────────────────────────────────────────
+// Init
 
 window.onload = async () => {
   const agreed = await checkAgreement();
@@ -315,7 +315,7 @@ window.onload = async () => {
   await refreshStatus();
 };
 
-// ── Agreement ─────────────────────────────────────────────────────────────────
+// Agreement 
 
 document.getElementById('agreeCheck').addEventListener('change', function() {
   document.getElementById('btnAgree').disabled = !this.checked;
@@ -342,7 +342,7 @@ async function signAgreement() {
   goStep('upload');
 }
 
-// ── Status ────────────────────────────────────────────────────────────────────
+// Status
 
 async function refreshStatus() {
   const r = await fetch('/api/status').then(r => r.json());
@@ -406,7 +406,7 @@ function markPillDone(ids) {
   });
 }
 
-// ── Navigation ────────────────────────────────────────────────────────────────
+// Navigation
 
 function goStep(step) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -432,7 +432,7 @@ function markStepDone(step) {
   tab.onclick = () => goStep(step);
 }
 
-// ── Uploads ───────────────────────────────────────────────────────────────────
+// Uploads
 
 function dragOver(e, id) { e.preventDefault(); document.getElementById(id).classList.add('dragover'); }
 function dragLeave(id) { document.getElementById(id).classList.remove('dragover'); }
@@ -465,7 +465,7 @@ async function checkCounts() {
   document.getElementById('btnToTrain').disabled = !(sketchCount >= 10 && photoCount >= 5);
 }
 
-// ── Training ──────────────────────────────────────────────────────────────────
+// Training
 
 async function startTraining() {
   document.getElementById('btnTrain').disabled = true;
@@ -543,7 +543,7 @@ function showError(err) {
   ll.style.color = '#c0392b';
 }
 
-// ── Generation ────────────────────────────────────────────────────────────────
+// Generation
 
 async function generateSketch() {
   const btn = document.getElementById('btnGenerate');
